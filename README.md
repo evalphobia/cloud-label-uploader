@@ -111,7 +111,6 @@ Options:
   -i, --input                    *image dir path --input='/path/to/image_dir'
   -o, --output[=./output.csv]    *output TSV file path --output='./output.csv'
   -t, --type[=jpg,jpeg,png,gif]   comma separate file extensions --type='jpg,jpeg,png,gif'
-      --headers[=label,path]      comma separate header columns --headers='label,path'
   -p, --prefix                    prefix for file path --prefix='gs://<your-bucket-name>'
 ```
 
@@ -123,10 +122,9 @@ $ csv-file-downloader list -i ./save -o result.csv -p "gs://my-bucket/test-proje
 # Check saved CSV file.
 $ cat result.csv
 
-label,path
-cat,gs://my-bucket/test-project/cat/1.jpg
-cat,gs://my-bucket/test-project/cat/3.JPG
-dog,gs://my-bucket/test-project/dog/2.jpg
-human,gs://my-bucket/test-project/human/4.png
-human,gs://my-bucket/test-project/human/5.png
+gs://my-bucket/test-project/cat/1.jpg,cat
+gs://my-bucket/test-project/cat/3.JPG,cat
+gs://my-bucket/test-project/dog/2.jpg,dog
+gs://my-bucket/test-project/human/4.png,human
+gs://my-bucket/test-project/human/5.png,human
 ```

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -15,7 +16,6 @@ type listT struct {
 	Input      string `cli:"*i,input" usage:"image dir path --input='/path/to/image_dir'"`
 	Output     string `cli:"*o,output" usage:"output TSV file path --output='./output.csv'" dft:"./output.csv"`
 	Type       string `cli:"t,type" usage:"comma separate file extensions --type='jpg,jpeg,png,gif'" dft:"jpg,jpeg,png,gif"`
-	Headers    string `cli:"headers" usage:"comma separate header columns --headers='label,path'" dft:"label,path"`
 	PathPrefix string `cli:"p,prefix" usage:"prefix for file path --prefix='gs://<your-bucket-name>'" dft:""`
 }
 
@@ -47,7 +47,7 @@ func execList(ctx *cli.Context) error {
 
 	pathPrefix = argv.PathPrefix
 	baseDir = fmt.Sprintf("%s/", filepath.Clean(argv.Input))
-	result := append([]string{argv.Headers}, getFilesFromDir(baseDir)...)
+	result := getFilesFromDir(baseDir)
 	return f.WriteAll(result)
 }
 
@@ -69,8 +69,8 @@ func getFilesFromDir(dir string) []string {
 			continue
 		}
 
-		d := strings.TrimPrefix(dir, baseDir)
-		paths = append(paths, fmt.Sprintf("%s,%s", d, filepath.Join(pathPrefix, d, fileName)))
+		label := strings.TrimPrefix(dir, baseDir)
+		paths = append(paths, fmt.Sprintf("%s,%s", path.Join(pathPrefix, label, fileName), label))
 	}
 
 	return paths
