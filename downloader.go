@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -28,10 +28,10 @@ var downloader = &cli.Command{
 	Name: "download",
 	Desc: "Download files from --file csv",
 	Argv: func() interface{} { return new(downloadT) },
-	Fn:   execOCR,
+	Fn:   execDownload,
 }
 
-func execOCR(ctx *cli.Context) error {
+func execDownload(ctx *cli.Context) error {
 	argv := ctx.Argv().(*downloadT)
 	maxReq := make(chan struct{}, argv.Parallel)
 
@@ -49,12 +49,15 @@ func execOCR(ctx *cli.Context) error {
 	}
 
 	outputDir := argv.OutputDir
+	if outputDir == "" {
+		outputDir = "."
+	}
 	err = makeDir(outputDir)
 	if err != nil {
 		return err
 	}
 
-	dirMap := make(map[string]struct{})
+	dirMap := newDirectoryMap()
 
 	var wg sync.WaitGroup
 	var counter uint64
@@ -80,13 +83,10 @@ func execOCR(ctx *cli.Context) error {
 
 			url := line[colURL]
 			dir := fmt.Sprintf("%s/%s", outputDir, line[colLabel])
-			if _, ok := dirMap[dir]; !ok {
-				dirMap[dir] = struct{}{}
-				err := makeDir(dir)
-				if err != nil {
-					fmt.Printf("[ERRORL:mkdir] #=[%d], dir=[%s], err=[%s]\n", num, dir, err)
-					return
-				}
+			err := dirMap.Create(dir)
+			if err != nil {
+				fmt.Printf("[ERRORL:mkdir] #=[%d], dir=[%s], err=[%s]\n", num, dir, err)
+				return
 			}
 
 			name := getFileName(line[colName], url)
@@ -123,7 +123,43 @@ func execOCR(ctx *cli.Context) error {
 	return nil
 }
 
-func getFileName(name, url string) string {
-	ext := strings.Split(filepath.Ext(url), "?")[0]
+// get file name with extension.
+func getFileName(name, uri string) string {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return name
+	}
+
+	ext := filepath.Ext(u.Path)
 	return name + ext
+}
+
+// to create new dir for the label.
+type directoryMap struct {
+	dataMu sync.RWMutex
+	data   map[string]struct{}
+}
+
+func newDirectoryMap() directoryMap {
+	return directoryMap{
+		data: make(map[string]struct{}),
+	}
+}
+
+func (m directoryMap) Create(key string) error {
+	if m.has(key) {
+		return nil
+	}
+
+	m.dataMu.Lock()
+	defer m.dataMu.Unlock()
+	m.data[key] = struct{}{}
+	return makeDir(key)
+}
+
+func (m directoryMap) has(key string) bool {
+	m.dataMu.RLock()
+	defer m.dataMu.RUnlock()
+	_, ok := m.data[key]
+	return ok
 }
