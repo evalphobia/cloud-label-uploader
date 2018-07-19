@@ -99,6 +99,32 @@ $ tree ./save
 3 directories, 5 files
 ```
 
+## upload command
+
+```bash
+$ csv-file-downloader help uploader
+Upload files to GCS from --input dir
+
+Options:
+
+  -h, --help                      display help information
+  -i, --input                    *image dir path --input='/path/to/image_dir'
+  -t, --type[=jpg,jpeg,png,gif]   comma separate file extensions --type='jpg,jpeg,png,gif'
+  -a, --all                       use all files
+  -b, --bucket                   *bucket name of GCS --bucket='<your-bucket-name>'
+  -d, --prefix                   *prefix for GCS --prefix='foo/bar'
+  -p, --parallel[=2]              parallel number --parallel=2
+```
+
+```bash
+# Create file list from given dir and save it to output CSV file.
+$ export GOOGLE_API_GO_PRIVATEKEY=`cat /path/to/gcs.pem`
+$ export GOOGLE_API_GO_EMAIL=gcs@example.iam.gserviceaccount.com
+$ csv-file-downloader upload -i ./save -b 'example-vcm' --prefix 'automl_model/20180401'
+
+# upload files to gs://example-vcm/automl_model/20180401/ ...
+```
+
 ## list command
 
 ```bash
