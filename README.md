@@ -47,7 +47,8 @@ Commands:
 
   help       show help
   download   Download files from --file csv
-  list       Create csv list file from --output dir
+  list       Create list file from --input dir images
+  upload     Upload files to Cloud Bucket(S3, GCS) from --input dir
 ```
 
 ## download command
@@ -59,12 +60,12 @@ Download files from --file csv
 Options:
 
   -h, --help           display help information
-  -f, --file          *download list file --file='/path/to/dir/input.csv'
+  -i, --input         *image list file --input='/path/to/dir/input.csv'
   -n, --name          *column name for filename --name='name'
   -l, --label         *column name for label --label='group'
   -u, --url           *column name for URL --url='path'
   -p, --parallel[=2]   parallel number --parallel=2
-  -o, --out            outout dir --out='/path/to/dir/out'
+  -o, --output         outout dir --output='/path/to/dir/'
 ```
 
 ```bash
@@ -80,7 +81,7 @@ id,label,image_url
 
 
 # Download files from URL in CSV.
-$ csv-file-downloader download -f ./my_file_list.csv -o ./save -n "id" -l "label" -u "image_url"
+$ csv-file-downloader download -i ./my_file_list.csv -o ./save -n "id" -l "label" -u "image_url"
 
 
 # Chech downloaded files.
@@ -102,8 +103,8 @@ $ tree ./save
 ## upload command
 
 ```bash
-$ csv-file-downloader help uploader
-Upload files to GCS from --input dir
+$ csv-file-downloader help upload
+Upload files to Cloud Bucket(S3, GCS) from --input dir
 
 Options:
 
@@ -111,8 +112,9 @@ Options:
   -i, --input                    *image dir path --input='/path/to/image_dir'
   -t, --type[=jpg,jpeg,png,gif]   comma separate file extensions --type='jpg,jpeg,png,gif'
   -a, --all                       use all files
-  -b, --bucket                   *bucket name of GCS --bucket='<your-bucket-name>'
-  -d, --prefix                   *prefix for GCS --prefix='foo/bar'
+  -c, --provider                 *cloud provider name for the bucket --provider='[s3,gcs]'
+  -b, --bucket                   *bucket name of S3/GCS --bucket='<your-bucket-name>'
+  -d, --prefix                   *prefix for S3/GCS --prefix='foo/bar'
   -p, --parallel[=2]              parallel number --parallel=2
 ```
 
@@ -120,7 +122,7 @@ Options:
 # Create file list from given dir and save it to output CSV file.
 $ export GOOGLE_API_GO_PRIVATEKEY=`cat /path/to/gcs.pem`
 $ export GOOGLE_API_GO_EMAIL=gcs@example.iam.gserviceaccount.com
-$ csv-file-downloader upload -i ./save -b 'example-vcm' --prefix 'automl_model/20180401'
+$ csv-file-downloader upload -i ./save -b 'example-vcm' --prefix 'automl_model/20180401' -c 'gcs'
 
 # upload files to gs://example-vcm/automl_model/20180401/ ...
 ```
@@ -129,15 +131,17 @@ $ csv-file-downloader upload -i ./save -b 'example-vcm' --prefix 'automl_model/2
 
 ```bash
 $ csv-file-downloader help list
-Create csv list file from --output dir
+Create list file from --input dir images
 
 Options:
 
   -h, --help                      display help information
   -i, --input                    *image dir path --input='/path/to/image_dir'
-  -o, --output[=./output.csv]    *output TSV file path --output='./output.csv'
+  -o, --output[=./output.csv]    *output CSV file path --output='./output.csv'
+  -a, --all                       use all files
   -t, --type[=jpg,jpeg,png,gif]   comma separate file extensions --type='jpg,jpeg,png,gif'
-  -p, --prefix                    prefix for file path --prefix='gs://<your-bucket-name>'
+  -f, --format[=csv]              set output format --format='[csv,sagemaker]'
+  -d, --prefix                   *prefix for file path --prefix='gs://<your-bucket-name>'
 ```
 
 ```bash

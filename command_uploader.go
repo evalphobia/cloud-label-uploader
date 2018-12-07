@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -10,12 +9,12 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/evalphobia/google-api-go-wrapper/config"
-	"github.com/evalphobia/google-api-go-wrapper/storage"
 	"github.com/mkideal/cli"
-)
 
-var _ = config.Config{}
+	"github.com/evalphobia/csv-file-downloader/provider"
+	_ "github.com/evalphobia/csv-file-downloader/provider/gcs"
+	_ "github.com/evalphobia/csv-file-downloader/provider/s3"
+)
 
 // uploader command
 type uploaderT struct {
@@ -23,14 +22,15 @@ type uploaderT struct {
 	Input          string `cli:"*i,input" usage:"image dir path --input='/path/to/image_dir'"`
 	Type           string `cli:"t,type" usage:"comma separate file extensions --type='jpg,jpeg,png,gif'" dft:"jpg,jpeg,png,gif"`
 	IncludeAllType bool   `cli:"a,all" usage:"use all files"`
-	Bucket         string `cli:"*b,bucket" usage:"bucket name of GCS --bucket='<your-bucket-name>'"`
-	PathPrefix     string `cli:"*d,prefix" usage:"prefix for GCS --prefix='foo/bar'"`
+	CloudProvider  string `cli:"*c,provider" usage:"cloud provider name for the bucket --provider='[s3,gcs]'"`
+	Bucket         string `cli:"*b,bucket" usage:"bucket name of S3/GCS --bucket='<your-bucket-name>'"`
+	PathPrefix     string `cli:"*d,prefix" usage:"prefix for S3/GCS --prefix='foo/bar'"`
 	Parallel       int    `cli:"p,parallel" usage:"parallel number --parallel=2" dft:"2"`
 }
 
 var uploader = &cli.Command{
-	Name: "uploader",
-	Desc: "Upload files to GCS from --input dir",
+	Name: "upload",
+	Desc: "Upload files to Cloud Bucket(S3, GCS) from --input dir",
 	Argv: func() interface{} { return new(uploaderT) },
 	Fn:   execUpload,
 }
@@ -38,18 +38,22 @@ var uploader = &cli.Command{
 func execUpload(ctx *cli.Context) error {
 	argv := ctx.Argv().(*uploaderT)
 
-	// create GCS cient from env vars
-	cli, err := storage.New(context.Background(), config.Config{})
+	// create Cloud Provider client from env vars
+	cli, err := provider.Create(argv.CloudProvider)
 	if err != nil {
 		panic(err)
 	}
+	if err := cli.CheckBucket(argv.Bucket); err != nil {
+		panic(err)
+	}
+
 	types := newFileType(strings.Split(argv.Type, ","))
 	if argv.IncludeAllType {
 		types.setIncludeAll(argv.IncludeAllType)
 	}
 
 	u := Uploader{
-		GCSClient:  cli,
+		Provider:   cli,
 		FileTypes:  types,
 		BaseDir:    fmt.Sprintf("%s/", filepath.Clean(argv.Input)),
 		Bucket:     argv.Bucket,
@@ -62,7 +66,7 @@ func execUpload(ctx *cli.Context) error {
 }
 
 type Uploader struct {
-	GCSClient  *storage.Storage
+	Provider   provider.Provider
 	FileTypes  fileType
 	Bucket     string
 	PathPrefix string
@@ -99,7 +103,7 @@ func (u *Uploader) UploadFilesFromDir(dir string) {
 			}()
 
 			num := atomic.AddUint64(&u.counter, 1)
-			fmt.Printf("exec #: [%d]\n", num)
+			fmt.Printf("exec #%d: [%s] [%s]\n", num, dir, fileName)
 
 			skip, err := u.upload(dir, fileName)
 			switch {
@@ -117,9 +121,9 @@ func (u *Uploader) upload(dir, fileName string) (skip bool, err error) {
 	objectPath := path.Join(u.PathPrefix, label, fileName)
 
 	// check file existance
-	ok, err := u.GCSClient.IsExists(storage.ObjectOption{
+	ok, err := u.Provider.IsExists(provider.FileOption{
 		BucketName: u.Bucket,
-		Path:       objectPath,
+		DstPath:    objectPath,
 	})
 	switch {
 	case err != nil:
@@ -129,9 +133,10 @@ func (u *Uploader) upload(dir, fileName string) (skip bool, err error) {
 	}
 
 	// upload file
-	return false, u.GCSClient.UploadByFile(filepath.Join(dir, fileName), storage.ObjectOption{
+	return false, u.Provider.UploadFromLocalFile(provider.FileOption{
+		SrcPath:    filepath.Join(dir, fileName),
 		BucketName: u.Bucket,
-		Path:       objectPath,
+		DstPath:    objectPath,
 	})
 }
 
