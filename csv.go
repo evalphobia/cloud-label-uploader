@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 // CSVHandler handles CSV file.
@@ -30,6 +31,11 @@ func NewCSVHandler(file string) (*CSVHandler, error) {
 	// load csv
 	reader := csv.NewReader(fp)
 	reader.LazyQuotes = true
+	switch filepath.Ext(file) {
+	case ".tsv":
+		reader.Comma = '\t'
+	}
+
 	header, err := reader.Read()
 	if err != nil {
 		return nil, err
