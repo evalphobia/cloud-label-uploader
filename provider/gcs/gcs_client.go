@@ -6,7 +6,7 @@ import (
 	"github.com/evalphobia/google-api-go-wrapper/config"
 	"github.com/evalphobia/google-api-go-wrapper/storage"
 
-	"github.com/evalphobia/csv-file-downloader/provider"
+	"github.com/evalphobia/cloud-label-uploader/provider"
 )
 
 const providerName = "gcs"

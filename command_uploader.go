@@ -11,9 +11,9 @@ import (
 
 	"github.com/mkideal/cli"
 
-	"github.com/evalphobia/csv-file-downloader/provider"
-	_ "github.com/evalphobia/csv-file-downloader/provider/gcs"
-	_ "github.com/evalphobia/csv-file-downloader/provider/s3"
+	"github.com/evalphobia/cloud-label-uploader/provider"
+	_ "github.com/evalphobia/cloud-label-uploader/provider/gcs"
+	_ "github.com/evalphobia/cloud-label-uploader/provider/s3"
 )
 
 // uploader command

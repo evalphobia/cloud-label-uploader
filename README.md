@@ -1,40 +1,40 @@
-csv-file-downloader
+csv-file-
 ----
 
 [![GoDoc][1]][2] [![License: MIT][3]][4] [![Release][5]][6] [![Build Status][7]][8] [![Go Report Card][13]][14] [![Code Climate][19]][20] [![BCH compliance][21]][22]
 
-[1]: https://godoc.org/github.com/evalphobia/csv-file-downloader?status.svg
-[2]: https://godoc.org/github.com/evalphobia/csv-file-downloader
+[1]: https://godoc.org/github.com/evalphobia/cloud-label-uploader?status.svg
+[2]: https://godoc.org/github.com/evalphobia/cloud-label-uploader
 [3]: https://img.shields.io/badge/License-MIT-blue.svg
 [4]: LICENSE.md
-[5]: https://img.shields.io/github/release/evalphobia/csv-file-downloader.svg
-[6]: https://github.com/evalphobia/csv-file-downloader/releases/latest
-[7]: https://travis-ci.org/evalphobia/csv-file-downloader.svg?branch=master
-[8]: https://travis-ci.org/evalphobia/csv-file-downloader
-[9]: https://coveralls.io/repos/evalphobia/csv-file-downloader/badge.svg?branch=master&service=github
-[10]: https://coveralls.io/github/evalphobia/csv-file-downloader?branch=master
-[11]: https://codecov.io/github/evalphobia/csv-file-downloader/coverage.svg?branch=master
-[12]: https://codecov.io/github/evalphobia/csv-file-downloader?branch=master
-[13]: https://goreportcard.com/badge/github.com/evalphobia/csv-file-downloader
-[14]: https://goreportcard.com/report/github.com/evalphobia/csv-file-downloader
-[15]: https://img.shields.io/github/downloads/evalphobia/csv-file-downloader/total.svg?maxAge=1800
-[16]: https://github.com/evalphobia/csv-file-downloader/releases
-[17]: https://img.shields.io/github/stars/evalphobia/csv-file-downloader.svg
-[18]: https://github.com/evalphobia/csv-file-downloader/stargazers
-[19]: https://codeclimate.com/github/evalphobia/csv-file-downloader/badges/gpa.svg
-[20]: https://codeclimate.com/github/evalphobia/csv-file-downloader
-[21]: https://bettercodehub.com/edge/badge/evalphobia/csv-file-downloader?branch=master
+[5]: https://img.shields.io/github/release/evalphobia/cloud-label-uploader.svg
+[6]: https://github.com/evalphobia/cloud-label-uploader/releases/latest
+[7]: https://travis-ci.org/evalphobia/cloud-label-uploader.svg?branch=master
+[8]: https://travis-ci.org/evalphobia/cloud-label-uploader
+[9]: https://coveralls.io/repos/evalphobia/cloud-label-uploader/badge.svg?branch=master&service=github
+[10]: https://coveralls.io/github/evalphobia/cloud-label-uploader?branch=master
+[11]: https://codecov.io/github/evalphobia/cloud-label-uploader/coverage.svg?branch=master
+[12]: https://codecov.io/github/evalphobia/cloud-label-uploader?branch=master
+[13]: https://goreportcard.com/badge/github.com/evalphobia/cloud-label-uploader
+[14]: https://goreportcard.com/report/github.com/evalphobia/cloud-label-uploader
+[15]: https://img.shields.io/github/downloads/evalphobia/cloud-label-uploader/total.svg?maxAge=1800
+[16]: https://github.com/evalphobia/cloud-label-uploader/releases
+[17]: https://img.shields.io/github/stars/evalphobia/cloud-label-uploader.svg
+[18]: https://github.com/evalphobia/cloud-label-uploader/stargazers
+[19]: https://codeclimate.com/github/evalphobia/cloud-label-uploader/badges/gpa.svg
+[20]: https://codeclimate.com/github/evalphobia/cloud-label-uploader
+[21]: https://bettercodehub.com/edge/badge/evalphobia/cloud-label-uploader?branch=master
 [22]: https://bettercodehub.com/
 
-`csv-file-downloader` download files from url in CSV.
+`cloud-label-uploader` download files from url in CSV.
 And create CSV file with label and path for Google Cloud AutoML.
 
 # Installation
 
-Install csv-file-downloader by command below,
+Install cloud-label-uploader by command below,
 
 ```bash
-$ go get github.com/evalphobia/csv-file-downloader
+$ go get github.com/evalphobia/cloud-label-uploader
 ```
 
 # Usage
@@ -42,7 +42,7 @@ $ go get github.com/evalphobia/csv-file-downloader
 ## root command
 
 ```bash
-$ csv-file-downloader
+$ cloud-label-uploader
 Commands:
 
   help       show help
@@ -54,7 +54,7 @@ Commands:
 ## download command
 
 ```bash
-$ csv-file-downloader help download
+$ cloud-label-uploader help download
 Download files from --file csv
 
 Options:
@@ -81,7 +81,7 @@ id,label,image_url
 
 
 # Download files from URL in CSV.
-$ csv-file-downloader download -i ./my_file_list.csv -o ./save -n "id" -l "label" -u "image_url"
+$ cloud-label-uploader download -i ./my_file_list.csv -o ./save -n "id" -l "label" -u "image_url"
 
 
 # Chech downloaded files.
@@ -103,7 +103,7 @@ $ tree ./save
 ## upload command
 
 ```bash
-$ csv-file-downloader help upload
+$ cloud-label-uploader help upload
 Upload files to Cloud Bucket(S3, GCS) from --input dir
 
 Options:
@@ -122,7 +122,7 @@ Options:
 # Create file list from given dir and save it to output CSV file.
 $ export GOOGLE_API_GO_PRIVATEKEY=`cat /path/to/gcs.pem`
 $ export GOOGLE_API_GO_EMAIL=gcs@example.iam.gserviceaccount.com
-$ csv-file-downloader upload -i ./save -b 'example-vcm' --prefix 'automl_model/20180401' -c 'gcs'
+$ cloud-label-uploader upload -i ./save -b 'example-vcm' --prefix 'automl_model/20180401' -c 'gcs'
 
 # upload files to gs://example-vcm/automl_model/20180401/ ...
 ```
@@ -130,7 +130,7 @@ $ csv-file-downloader upload -i ./save -b 'example-vcm' --prefix 'automl_model/2
 ## list command
 
 ```bash
-$ csv-file-downloader help list
+$ cloud-label-uploader help list
 Create list file from --input dir images
 
 Options:
@@ -146,7 +146,7 @@ Options:
 
 ```bash
 # Create file list from given dir and save it to output CSV file.
-$ csv-file-downloader list -i ./save -o result.csv -p "gs://my-bucket/test-project"
+$ cloud-label-uploader list -i ./save -o result.csv -p "gs://my-bucket/test-project"
 
 
 # Check saved CSV file.
