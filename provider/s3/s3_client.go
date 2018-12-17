@@ -7,7 +7,7 @@ import (
 	"github.com/evalphobia/aws-sdk-go-wrapper/config"
 	"github.com/evalphobia/aws-sdk-go-wrapper/s3"
 
-	"github.com/evalphobia/csv-file-downloader/provider"
+	"github.com/evalphobia/cloud-label-uploader/provider"
 )
 
 const providerName = "s3"
