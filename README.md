@@ -26,8 +26,8 @@ cloud-label-uploader
 [21]: https://bettercodehub.com/edge/badge/evalphobia/cloud-label-uploader?branch=master
 [22]: https://bettercodehub.com/
 
-`cloud-label-uploader` download files from url in CSV.
-And create CSV file with label and path for Google Cloud AutoML.
+`cloud-label-uploader` download and upload files from url in CSV.
+And create labeled CSV file for machine learning of Google Cloud AutoML / AWS Sagemaker.
 
 # Installation
 

@@ -33,22 +33,49 @@ var downloader = &cli.Command{
 
 func execDownload(ctx *cli.Context) error {
 	argv := ctx.Argv().(*downloadT)
-	maxReq := make(chan struct{}, argv.Parallel)
 
-	f, err := NewCSVHandler(argv.Input)
+	r := newDownloadRunner(*argv)
+	return r.Run()
+}
+
+type DownloadRunner struct {
+	// parameters
+	Input       string
+	ColumnName  string
+	ColumnLabel string
+	ColumnURL   string
+	Parallel    int
+	OutputDir   string
+}
+
+func newDownloadRunner(p downloadT) DownloadRunner {
+	return DownloadRunner{
+		Input:       p.Input,
+		ColumnName:  p.ColumnName,
+		ColumnLabel: p.ColumnLabel,
+		ColumnURL:   p.ColumnURL,
+		Parallel:    p.Parallel,
+		OutputDir:   p.OutputDir,
+	}
+}
+
+func (r *DownloadRunner) Run() error {
+	maxReq := make(chan struct{}, r.Parallel)
+
+	f, err := NewCSVHandler(r.Input)
 	if err != nil {
 		return err
 	}
 
-	colName := argv.ColumnName
-	colLabel := argv.ColumnLabel
-	colURL := argv.ColumnURL
+	colName := r.ColumnName
+	colLabel := r.ColumnLabel
+	colURL := r.ColumnURL
 	err = f.checkHeaders(colName, colLabel, colURL)
 	if err != nil {
 		return err
 	}
 
-	outputDir := argv.OutputDir
+	outputDir := r.OutputDir
 	if outputDir == "" {
 		outputDir = "."
 	}
@@ -146,7 +173,7 @@ func newDirectoryMap() directoryMap {
 	}
 }
 
-func (m directoryMap) Create(key string) error {
+func (m *directoryMap) Create(key string) error {
 	if m.has(key) {
 		return nil
 	}
@@ -157,7 +184,7 @@ func (m directoryMap) Create(key string) error {
 	return makeDir(key)
 }
 
-func (m directoryMap) has(key string) bool {
+func (m *directoryMap) has(key string) bool {
 	m.dataMu.RLock()
 	defer m.dataMu.RUnlock()
 	_, ok := m.data[key]
