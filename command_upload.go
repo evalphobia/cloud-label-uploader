@@ -16,8 +16,8 @@ import (
 	_ "github.com/evalphobia/cloud-label-uploader/provider/s3"
 )
 
-// uploader command
-type uploaderT struct {
+// upload command
+type uploadT struct {
 	cli.Helper
 	Input          string `cli:"*i,input" usage:"image dir path --input='/path/to/image_dir'"`
 	Type           string `cli:"t,type" usage:"comma separate file extensions --type='jpg,jpeg,png,gif'" dft:"jpg,jpeg,png,gif"`
@@ -32,37 +32,69 @@ type uploaderT struct {
 var uploader = &cli.Command{
 	Name: "upload",
 	Desc: "Upload files to Cloud Bucket(S3, GCS) from --input dir",
-	Argv: func() interface{} { return new(uploaderT) },
+	Argv: func() interface{} { return new(uploadT) },
 	Fn:   execUpload,
 }
 
 func execUpload(ctx *cli.Context) error {
-	argv := ctx.Argv().(*uploaderT)
+	argv := ctx.Argv().(*uploadT)
 
+	r := newUploadRunner(*argv)
+	return r.Run()
+}
+
+type UploadRunner struct {
+	// parameters
+	Input          string
+	Type           string
+	IncludeAllType bool
+	InputLabelFile string
+	CloudProvider  string
+	Bucket         string
+	PathPrefix     string
+	Parallel       int
+
+	Formatter formatter
+}
+
+func newUploadRunner(p uploadT) UploadRunner {
+	return UploadRunner{
+		Input:          p.Input,
+		Type:           p.Type,
+		IncludeAllType: p.IncludeAllType,
+		InputLabelFile: p.InputLabelFile,
+		CloudProvider:  p.CloudProvider,
+		Bucket:         p.Bucket,
+		PathPrefix:     p.PathPrefix,
+		Parallel:       p.Parallel,
+	}
+}
+
+func (r *UploadRunner) Run() error {
 	// create Cloud Provider client from env vars
-	cli, err := provider.Create(argv.CloudProvider)
+	cli, err := provider.Create(r.CloudProvider)
 	if err != nil {
 		panic(err)
 	}
-	if err := cli.CheckBucket(argv.Bucket); err != nil {
+	if err := cli.CheckBucket(r.Bucket); err != nil {
 		panic(err)
 	}
 
-	types := newFileType(strings.Split(argv.Type, ","))
-	if argv.IncludeAllType {
-		types.setIncludeAll(argv.IncludeAllType)
+	types := newFileType(strings.Split(r.Type, ","))
+	if r.IncludeAllType {
+		types.setIncludeAll(r.IncludeAllType)
 	}
 
 	u := Uploader{
 		Provider:   cli,
 		FileTypes:  types,
-		BaseDir:    fmt.Sprintf("%s/", filepath.Clean(argv.Input)),
-		Bucket:     argv.Bucket,
-		PathPrefix: strings.TrimLeft(argv.PathPrefix, "/"),
-		maxReq:     make(chan struct{}, argv.Parallel),
+		BaseDir:    fmt.Sprintf("%s/", filepath.Clean(r.Input)),
+		Bucket:     r.Bucket,
+		PathPrefix: strings.TrimLeft(r.PathPrefix, "/"),
+		maxReq:     make(chan struct{}, r.Parallel),
 	}
-	if argv.InputLabelFile != "" {
-		u.UploadFileFromPath(argv.InputLabelFile)
+	if r.InputLabelFile != "" {
+		u.UploadFileFromPath(r.InputLabelFile)
 	}
 	u.UploadFilesFromDir(u.BaseDir)
 	u.wg.Wait()
@@ -151,6 +183,6 @@ func (u *Uploader) upload(dir, fileName string) (skip bool, err error) {
 	})
 }
 
-func (u Uploader) getLabel(path string) string {
+func (u *Uploader) getLabel(path string) string {
 	return strings.TrimPrefix(path, u.BaseDir)
 }

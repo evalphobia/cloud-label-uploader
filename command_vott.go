@@ -72,6 +72,10 @@ func (r *VottRunner) Run() error {
 
 	// read VoTT JSON and convert to AutoML format.
 	results, err := r.ReadDataFromJSONFiles(jsonFiles)
+	if err != nil {
+		return err
+	}
+
 	// save to CSV file
 	return f.WriteAll(results)
 }
@@ -79,7 +83,7 @@ func (r *VottRunner) Run() error {
 func (r VottRunner) FindJSONFilesFromDir(dir string) ([]string, error) {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	types := newFileType([]string{"json"})

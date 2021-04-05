@@ -37,38 +37,73 @@ var (
 func execList(ctx *cli.Context) error {
 	argv := ctx.Argv().(*listT)
 
+	r := newListRunner(*argv)
 	formatter, err := createListFormat(argv.Format)
 	if err != nil {
 		return err
 	}
+	r.Formatter = formatter
+	return r.Run()
+}
 
-	f, err := NewFileHandler(argv.Output)
+type ListRunner struct {
+	// parameters
+	Input          string
+	Output         string
+	IncludeAllType bool
+	Type           string
+	Format         string
+	PathPrefix     string
+
+	Formatter formatter
+}
+
+func newListRunner(p listT) ListRunner {
+	return ListRunner{
+		Input:          p.Input,
+		Output:         p.Output,
+		IncludeAllType: p.IncludeAllType,
+		Type:           p.Type,
+		Format:         p.Format,
+		PathPrefix:     p.PathPrefix,
+	}
+}
+
+func (r *ListRunner) Run() error {
+	f, err := NewFileHandler(r.Output)
 	if err != nil {
 		return err
 	}
 
-	types := newFileType(strings.Split(argv.Type, ","))
-	if argv.IncludeAllType {
-		types.setIncludeAll(argv.IncludeAllType)
+	types := newFileType(strings.Split(r.Type, ","))
+	if r.IncludeAllType {
+		types.setIncludeAll(r.IncludeAllType)
 	}
 
-	pathPrefix = argv.PathPrefix
-	baseDir = fmt.Sprintf("%s/", filepath.Clean(argv.Input))
-	result := getFilesFromDir(formatter, baseDir, types)
+	pathPrefix = r.PathPrefix
+	baseDir = fmt.Sprintf("%s/", filepath.Clean(r.Input))
+	result, err := r.GetFilesFromDir(baseDir, types)
+	if err != nil {
+		return err
+	}
 	return f.WriteAll(result)
 }
 
-func getFilesFromDir(fmtr formatter, dir string, types fileType) []string {
+func (r *ListRunner) GetFilesFromDir(dir string, types fileType) ([]string, error) {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var paths []string
 	for _, file := range files {
 		fileName := file.Name()
 		if file.IsDir() {
-			paths = append(paths, getFilesFromDir(fmtr, filepath.Join(dir, fileName), types)...)
+			sublist, err := r.GetFilesFromDir(filepath.Join(dir, fileName), types)
+			if err != nil {
+				return nil, err
+			}
+			paths = append(paths, sublist...)
 			continue
 		}
 
@@ -78,10 +113,9 @@ func getFilesFromDir(fmtr formatter, dir string, types fileType) []string {
 
 		label := strings.TrimPrefix(dir, baseDir)
 		path := getURLPath(pathPrefix, path.Join(label, fileName))
-		paths = append(paths, fmtr.format(path, label))
+		paths = append(paths, r.Formatter.format(path, label))
 	}
-
-	return paths
+	return paths, nil
 }
 
 func getURLPath(prefix, filepath string) string {
