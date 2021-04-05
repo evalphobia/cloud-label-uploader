@@ -22,10 +22,11 @@ type uploaderT struct {
 	Input          string `cli:"*i,input" usage:"image dir path --input='/path/to/image_dir'"`
 	Type           string `cli:"t,type" usage:"comma separate file extensions --type='jpg,jpeg,png,gif'" dft:"jpg,jpeg,png,gif"`
 	IncludeAllType bool   `cli:"a,all" usage:"use all files"`
+	InputLabelFile string `cli:"l,label" usage:"label file for training (outputted CSV file) --label='/path/to/output.csv'"`
 	CloudProvider  string `cli:"*c,provider" usage:"cloud provider name for the bucket --provider='[s3,gcs]'"`
 	Bucket         string `cli:"*b,bucket" usage:"bucket name of S3/GCS --bucket='<your-bucket-name>'"`
-	PathPrefix     string `cli:"*d,prefix" usage:"prefix for S3/GCS --prefix='foo/bar'"`
-	Parallel       int    `cli:"p,parallel" usage:"parallel number --parallel=2" dft:"2"`
+	PathPrefix     string `cli:"*p,prefix" usage:"prefix for S3/GCS --prefix='foo/bar'"`
+	Parallel       int    `cli:"m,parallel" usage:"parallel number (multiple upload) --parallel=2" dft:"2"`
 }
 
 var uploader = &cli.Command{
@@ -59,6 +60,9 @@ func execUpload(ctx *cli.Context) error {
 		Bucket:     argv.Bucket,
 		PathPrefix: strings.TrimLeft(argv.PathPrefix, "/"),
 		maxReq:     make(chan struct{}, argv.Parallel),
+	}
+	if argv.InputLabelFile != "" {
+		u.UploadFileFromPath(argv.InputLabelFile)
 	}
 	u.UploadFilesFromDir(u.BaseDir)
 	u.wg.Wait()
@@ -113,6 +117,13 @@ func (u *Uploader) UploadFilesFromDir(dir string) {
 				fmt.Printf("[SKIP] already exists #=[%d], filepath=[%s]\n", num, filepath.Join(dir, fileName))
 			}
 		}(dir, fileName)
+	}
+}
+
+func (u *Uploader) UploadFileFromPath(path string) {
+	_, err := u.upload(filepath.Dir(path), filepath.Base(path))
+	if err != nil {
+		panic(err)
 	}
 }
 

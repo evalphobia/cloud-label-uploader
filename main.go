@@ -13,6 +13,7 @@ func main() {
 		cli.Tree(downloader),
 		cli.Tree(list),
 		cli.Tree(uploader),
+		cli.Tree(vott),
 	).Run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
