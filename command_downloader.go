@@ -20,7 +20,7 @@ type downloadT struct {
 	ColumnName  string `cli:"*n,name" usage:"column name for filename --name='name'"`
 	ColumnLabel string `cli:"*l,label" usage:"column name for label --label='group'"`
 	ColumnURL   string `cli:"*u,url" usage:"column name for URL --url='path'"`
-	Parallel    int    `cli:"p,parallel" usage:"parallel number --parallel=2" dft:"2"`
+	Parallel    int    `cli:"m,parallel" usage:"parallel number (multiple download) --parallel=2" dft:"2"`
 	OutputDir   string `cli:"o,output" usage:"outout dir --output='/path/to/dir/'"`
 }
 

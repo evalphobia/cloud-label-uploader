@@ -49,6 +49,7 @@ Commands:
   download   Download files from --file csv
   list       Create list file from --input dir images
   upload     Upload files to Cloud Bucket(S3, GCS) from --input dir
+  vott       Create object-detection list file from VoTT results
 ```
 
 ## download command
@@ -64,7 +65,7 @@ Options:
   -n, --name          *column name for filename --name='name'
   -l, --label         *column name for label --label='group'
   -u, --url           *column name for URL --url='path'
-  -p, --parallel[=2]   parallel number --parallel=2
+  -m, --parallel[=2]   parallel number (multiple download) --parallel=2
   -o, --output         outout dir --output='/path/to/dir/'
 ```
 
@@ -100,32 +101,6 @@ $ tree ./save
 3 directories, 5 files
 ```
 
-## upload command
-
-```bash
-$ cloud-label-uploader help upload
-Upload files to Cloud Bucket(S3, GCS) from --input dir
-
-Options:
-
-  -h, --help                      display help information
-  -i, --input                    *image dir path --input='/path/to/image_dir'
-  -t, --type[=jpg,jpeg,png,gif]   comma separate file extensions --type='jpg,jpeg,png,gif'
-  -a, --all                       use all files
-  -c, --provider                 *cloud provider name for the bucket --provider='[s3,gcs]'
-  -b, --bucket                   *bucket name of S3/GCS --bucket='<your-bucket-name>'
-  -d, --prefix                   *prefix for S3/GCS --prefix='foo/bar'
-  -p, --parallel[=2]              parallel number --parallel=2
-```
-
-```bash
-# Create file list from given dir and save it to output CSV file.
-$ export GOOGLE_API_GO_PRIVATEKEY=`cat /path/to/gcs.pem`
-$ export GOOGLE_API_GO_EMAIL=gcs@example.iam.gserviceaccount.com
-$ cloud-label-uploader upload -i ./save -b 'example-vcm' --prefix 'automl_model/20180401' -c 'gcs'
-
-# upload files to gs://example-vcm/automl_model/20180401/ ...
-```
 
 ## list command
 
@@ -141,7 +116,7 @@ Options:
   -a, --all                       use all files
   -t, --type[=jpg,jpeg,png,gif]   comma separate file extensions --type='jpg,jpeg,png,gif'
   -f, --format[=csv]              set output format --format='[csv,sagemaker]'
-  -d, --prefix                   *prefix for file path --prefix='gs://<your-bucket-name>'
+  -p, --prefix                   *prefix for file path --prefix='gs://<your-bucket-name>'
 ```
 
 ```bash
@@ -157,4 +132,68 @@ gs://my-bucket/test-project/cat/3.JPG,cat
 gs://my-bucket/test-project/dog/2.jpg,dog
 gs://my-bucket/test-project/human/4.png,human
 gs://my-bucket/test-project/human/5.png,human
+```
+
+
+## upload command
+
+```bash
+$ cloud-label-uploader help upload
+Upload files to Cloud Bucket(S3, GCS) from --input dir
+
+Options:
+
+  -h, --help                      display help information
+  -i, --input                    *image dir path --input='/path/to/image_dir'
+  -t, --type[=jpg,jpeg,png,gif]   comma separate file extensions --type='jpg,jpeg,png,gif'
+  -a, --all                       use all files
+  -l, --label                     label file for training (outputted CSV file) --label='/path/to/output.csv'
+  -c, --provider                 *cloud provider name for the bucket --provider='[s3,gcs]'
+  -b, --bucket                   *bucket name of S3/GCS --bucket='<your-bucket-name>'
+  -p, --prefix                   *prefix for S3/GCS --prefix='foo/bar'
+  -m, --parallel[=2]              parallel number (multiple upload) --parallel=2
+```
+
+```bash
+# Before uploading, create GCS bucket
+# $ gsutil mb gs://example-bucket
+
+# Create file list from given dir and save it to output CSV file.
+# $ export GOOGLE_API_GO_PRIVATEKEY=`cat /path/to/gcs.pem`
+# $ export GOOGLE_API_GO_EMAIL=gcs@example.iam.gserviceaccount.com
+$ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/gcs.json
+$ cloud-label-uploader upload -i ./save -b 'example-bucket' -t 'jpg,png' -p 'automl_model/20180401' -c 'gcs' -l './result.csv' -m 10
+
+# upload files to gs://example-bucket/automl_model/20180401/ ...
+```
+
+
+## vott command
+
+```bash
+$ cloud-label-uploader help vott
+Create object-detection list file from VoTT results
+
+Options:
+
+  -h, --help                    display help information
+  -j, --json                   *VoTT json results dir path --image='/path/to/vott_json_dir'
+  -o, --output[=./output.csv]  *output CSV file path --output='./output.csv'
+  -p, --prefix[=gs://]         *prefix for file path --prefix='gs://<your-bucket-name>'
+  -r, --recursive[=false]       read files in sub directories
+```
+
+```bash
+# Create file list from given dir and save it to output CSV file.
+$ cloud-label-uploader list -j ./vott/result -o result.csv -p "gs://my-bucket/test-project/"
+
+
+# Check saved CSV file.
+$ cat result.csv
+
+UNASSIGNED,gs://my-bucket/test-project/cat/1.jpg,cat,0.17785499052004333,0.3945237235067437,0.28786057692307687,0.3945237235067437,0.28786057692307687,0.5815947133911368,0.17785499052004333,0.5815947133911368
+UNASSIGNED,gs://my-bucket/test-project/cat/3.JPG,cat,0.7158391915641477,0.44460227272727265,0.8379421133567663,0.44460227272727265,0.8379421133567663,0.5285943675889327,0.7158391915641477,0.5285943675889327
+UNASSIGNED,gs://my-bucket/test-project/dog/2.jpg,dog,0.6664113285482123,0.4608950407608696,0.7451203615926327,0.4608950407608696,0.7451203615926327,0.6013332201086957,0.6664113285482123,0.6013332201086957
+UNASSIGNED,gs://my-bucket/test-project/human/4.png,human,0.730020144907909,0.4057476065751445,0.8625490926327194,0.4057476065751445,0.8625490926327194,0.5787572254335259,0.730020144907909,0.5787572254335259
+UNASSIGNED,gs://my-bucket/test-project/human/5.png,human,,0.6799583559046587,0.4373871026011561,0.7823545842361863,0.4373871026011561,0.7823545842361863,0.5737953847543352,0.6799583559046587,0.5737953847543352
 ```

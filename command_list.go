@@ -19,7 +19,7 @@ type listT struct {
 	IncludeAllType bool   `cli:"a,all" usage:"use all files"`
 	Type           string `cli:"t,type" usage:"comma separate file extensions --type='jpg,jpeg,png,gif'" dft:"jpg,jpeg,png,gif"`
 	Format         string `cli:"f,format" usage:"set output format --format='[csv,sagemaker]'" dft:"csv"`
-	PathPrefix     string `cli:"*d,prefix" usage:"prefix for file path --prefix='gs://<your-bucket-name>'" dft:""`
+	PathPrefix     string `cli:"*p,prefix" usage:"prefix for file path --prefix='gs://<your-bucket-name>'" dft:""`
 }
 
 var list = &cli.Command{
