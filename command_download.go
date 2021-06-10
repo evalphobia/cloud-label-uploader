@@ -109,7 +109,7 @@ func (r *DownloadRunner) Run() error {
 			fmt.Printf("exec #: [%d]\n", num)
 
 			url := line[colURL]
-			dir := fmt.Sprintf("%s/%s", outputDir, line[colLabel])
+			dir := filepath.Join(outputDir, line[colLabel])
 			err := dirMap.Create(dir)
 			if err != nil {
 				fmt.Printf("[ERRORL:mkdir] #=[%d], dir=[%s], err=[%s]\n", num, dir, err)
@@ -117,17 +117,18 @@ func (r *DownloadRunner) Run() error {
 			}
 
 			name := getFileName(line[colName], url)
-			filepath := fmt.Sprintf("%s/%s", dir, name)
-			if isFileExist(filepath) {
-				fmt.Printf("[SKIP] already exists #=[%d], filepath=[%s]\n", num, filepath)
+			filePath := filepath.Clean(filepath.Join(dir, name))
+			if isFileExist(filePath) {
+				fmt.Printf("[SKIP] already exists #=[%d], filepath=[%s]\n", num, filePath)
 				return
 			}
 
-			resp, err := http.Get(url)
+			resp, err := http.Get(url) //nolint:gosec
 			if err != nil {
 				fmt.Printf("[ERRORL:http] #=[%d], url=[%s], err=[%s]\n", num, url, err)
 				return
 			}
+			defer resp.Body.Close() //nolint:errcheck
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
@@ -135,14 +136,17 @@ func (r *DownloadRunner) Run() error {
 				return
 			}
 
-			fp, err := os.OpenFile(filepath, os.O_CREATE|os.O_WRONLY, 0666)
+			fp, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0600)
 			if err != nil {
-				fmt.Printf("[ERROR:OpenFile] #=[%d], filepath=[%s], err=[%s]\n", num, filepath, err)
+				fmt.Printf("[ERROR:OpenFile] #=[%d], filepath=[%s], err=[%s]\n", num, filePath, err)
 				return
 			}
+			defer fp.Close() //nolint
 
-			defer fp.Close()
-			fp.Write(body)
+			_, err = fp.Write(body)
+			if err != nil {
+				fmt.Printf("[ERROR:WriteFile] #=[%d], filepath=[%s], err=[%s]\n", num, filePath, err)
+			}
 		}(line)
 	}
 

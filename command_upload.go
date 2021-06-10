@@ -163,7 +163,7 @@ func (u *Uploader) upload(dir, fileName string) (skip bool, err error) {
 	label := u.getLabel(dir)
 	objectPath := path.Join(u.PathPrefix, label, fileName)
 
-	// check file existance
+	// check file existence
 	ok, err := u.Provider.IsExists(provider.FileOption{
 		BucketName: u.Bucket,
 		DstPath:    objectPath,
