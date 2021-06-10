@@ -7,7 +7,6 @@ on:
 
 env:
   GO_VERSION: 1.16.4
-  GO111MODULE: off
 
 jobs:
   release:
@@ -31,7 +30,7 @@ jobs:
         fetch-depth: 0
     - name: Init
       run: |
-        go get ./...
+        go mod download
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@v2
       with:

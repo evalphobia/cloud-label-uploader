@@ -7,7 +7,6 @@ on:
 
 env:
   GO_VERSION: 1.16.4
-  GO111MODULE: off
 
 jobs:
   build:
@@ -29,7 +28,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Build
       run: |
-        go get ./...
+        go mod download
         go build .
 
   lint:
@@ -51,7 +50,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Init
       run: |
-        go get ./...
+        go mod download
     - name: Lint
       uses: golangci/golangci-lint-action@v2
       with:
