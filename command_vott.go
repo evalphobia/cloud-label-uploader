@@ -14,7 +14,7 @@ import (
 // vott command
 type vottT struct {
 	cli.Helper
-	JSONDir     string `cli:"*j,json" usage:"VoTT json results dir path --image='/path/to/vott_json_dir'"`
+	InputDir    string `cli:"*i,input" usage:"VoTT json results dir path --input='/path/to/vott_json_dir'"`
 	Output      string `cli:"*o,output" usage:"output CSV file path --output='./output.csv'" dft:"./output.csv"`
 	PathPrefix  string `cli:"*p,prefix" usage:"prefix for file path --prefix='gs://<your-bucket-name>'" dft:"gs://"`
 	IsRecursive bool   `cli:"r,recursive" usage:"read files in sub directories" dft:"false"`
@@ -36,7 +36,7 @@ func execVott(ctx *cli.Context) error {
 
 type VottRunner struct {
 	// parameters
-	JSONDir     string
+	InputDir    string
 	Output      string
 	PathPrefix  string
 	IsRecursive bool
@@ -46,7 +46,7 @@ type VottRunner struct {
 
 func newVottRunner(p vottT) VottRunner {
 	return VottRunner{
-		JSONDir:     p.JSONDir,
+		InputDir:    p.InputDir,
 		Output:      p.Output,
 		PathPrefix:  p.PathPrefix,
 		IsRecursive: p.IsRecursive,
@@ -64,7 +64,7 @@ func (r *VottRunner) Run() error {
 	}
 
 	// get json file list
-	baseDir = fmt.Sprintf("%s/", filepath.Clean(r.JSONDir))
+	baseDir = fmt.Sprintf("%s/", filepath.Clean(r.InputDir))
 	jsonFiles, err := r.FindJSONFilesFromDir(baseDir)
 	if err != nil {
 		return err
@@ -121,6 +121,9 @@ func (r VottRunner) ReadDataFromJSONFiles(list []string) ([]string, error) {
 		if err := json.Unmarshal(byt, &data); err != nil {
 			return nil, err
 		}
+		if !data.HasValidBoundingBox() {
+			fmt.Printf("[WARN] invalid bounding box: [%s]\n", path)
+		}
 
 		w := data.Asset.Size.Width
 		h := data.Asset.Size.Height
@@ -143,6 +146,35 @@ func (r VottRunner) ReadDataFromJSONFiles(list []string) ([]string, error) {
 type VottFormat struct {
 	Asset   vottAsset    `json:"asset"`
 	Regions []vottRegion `json:"regions"`
+}
+
+func (v VottFormat) HasValidBoundingBox() bool {
+	for _, r := range v.Regions {
+		if len(r.Points) < 2 {
+			return false
+		}
+
+		minX, minY, maxX, maxY := -1.0, -1.0, -1.0, -1.0
+		for _, p := range r.Points {
+			if minX < 0 || p.X < minX {
+				minX = p.X
+			}
+			if minY < 0 || p.Y < minY {
+				minY = p.Y
+			}
+			if maxX < 0 || p.X > maxX {
+				maxX = p.X
+			}
+			if maxY < 0 || p.Y > maxY {
+				maxY = p.Y
+			}
+		}
+		switch {
+		case minX == maxX, minY == maxY:
+			return false
+		}
+	}
+	return true
 }
 
 type vottAsset struct {
@@ -174,12 +206,33 @@ func (v vottRegion) FullVertices(width, height int64) (tagName string, vertices 
 	}
 	tagName = v.Tags[0]
 
-	const verticesSize = 4 * 2
-	results := make([]string, 0, verticesSize)
+	minX, minY, maxX, maxY := -1.0, -1.0, -1.0, -1.0
 	for _, p := range v.Points {
-		results = append(results, strconv.FormatFloat(p.X/float64(width), 'f', -1, 64))
-		results = append(results, strconv.FormatFloat(p.Y/float64(height), 'f', -1, 64))
+		if minX < 0 || p.X < minX {
+			minX = p.X
+		}
+		if minY < 0 || p.Y < minY {
+			minY = p.Y
+		}
+		if maxX < 0 || p.X > maxX {
+			maxX = p.X
+		}
+		if maxY < 0 || p.Y > maxY {
+			maxY = p.Y
+		}
 	}
+
+	// output: [(x1,y1), (x2,y1), (x2,y2), (x1,y2)]
+	const verticesSize = 4 * 2
+	results := make([]string, verticesSize)
+	results[0] = strconv.FormatFloat(minX/float64(width), 'f', -1, 64)
+	results[1] = strconv.FormatFloat(minY/float64(height), 'f', -1, 64)
+	results[2] = strconv.FormatFloat(maxX/float64(width), 'f', -1, 64)
+	results[3] = strconv.FormatFloat(minY/float64(height), 'f', -1, 64)
+	results[4] = strconv.FormatFloat(maxX/float64(width), 'f', -1, 64)
+	results[5] = strconv.FormatFloat(maxY/float64(height), 'f', -1, 64)
+	results[6] = strconv.FormatFloat(minX/float64(width), 'f', -1, 64)
+	results[7] = strconv.FormatFloat(maxY/float64(height), 'f', -1, 64)
 	return tagName, results
 }
 
