@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -88,7 +89,7 @@ func (r VottRunner) FindJSONFilesFromDir(dir string) ([]string, error) {
 
 	types := newFileType([]string{"json"})
 
-	var list []string
+	list := make([]string, 0, len(files))
 	for _, file := range files {
 		fileName := file.Name()
 		if r.IsRecursive && file.IsDir() {
@@ -112,7 +113,7 @@ func (r VottRunner) FindJSONFilesFromDir(dir string) ([]string, error) {
 func (r VottRunner) ReadDataFromJSONFiles(list []string) ([]string, error) {
 	var results []string
 	for _, path := range list {
-		byt, err := ioutil.ReadFile(path)
+		byt, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}

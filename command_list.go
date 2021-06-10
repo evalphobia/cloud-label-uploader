@@ -95,7 +95,7 @@ func (r *ListRunner) GetFilesFromDir(dir string, types fileType) ([]string, erro
 		return nil, err
 	}
 
-	var paths []string
+	paths := make([]string, 0, len(files))
 	for _, file := range files {
 		fileName := file.Name()
 		if file.IsDir() {

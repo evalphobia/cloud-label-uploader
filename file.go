@@ -15,7 +15,7 @@ type FileHandler struct {
 func NewFileHandler(file string) (*FileHandler, error) {
 	info, err := os.Stat(file)
 	if err == nil && info.IsDir() {
-		return nil, fmt.Errorf("'%s' is dir, please set file path.", file)
+		return nil, fmt.Errorf("'%s' is dir, please set file path", file)
 	}
 
 	return &FileHandler{
@@ -29,8 +29,11 @@ func (f *FileHandler) WriteAll(lines []string) error {
 	if err != nil {
 		return err
 	}
-	defer fp.Close()
+	defer fp.Close() //nolint
 
-	fp.WriteString(strings.Join(lines, "\n"))
+	_, err = fp.WriteString(strings.Join(lines, "\n"))
+	if err != nil {
+		return err
+	}
 	return fp.Sync()
 }

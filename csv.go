@@ -17,13 +17,14 @@ type CSVHandler struct {
 
 // NewCSVHandler returns initialized *CSVHandler
 func NewCSVHandler(file string) (*CSVHandler, error) {
+	file = filepath.Clean(file)
 	info, err := os.Stat(file)
 	if err == nil && info.IsDir() {
-		return nil, fmt.Errorf("'%s' is dir, please set file path.", file)
+		return nil, fmt.Errorf("'%s' is dir, please set file path", file)
 	}
 
 	// load file
-	fp, err := os.Open(file)
+	fp, err := os.Open(file) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}

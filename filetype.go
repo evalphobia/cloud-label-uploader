@@ -36,10 +36,6 @@ func (f *fileType) setIncludeAll(b bool) {
 	f.includeAll = b
 }
 
-func (f *fileType) setExcludeDot(b bool) {
-	f.excludeDot = b
-}
-
 func (f fileType) isTarget(path string) bool {
 	if f.includeAll {
 		if !f.excludeDot {

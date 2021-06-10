@@ -54,6 +54,8 @@ Commands:
 
 ## download command
 
+`download` downloads file from url in CSV file.
+
 ```bash
 $ cloud-label-uploader help download
 Download files from --file csv
@@ -61,7 +63,7 @@ Download files from --file csv
 Options:
 
   -h, --help           display help information
-  -i, --input         *image list file --input='/path/to/dir/input.csv'
+  -i, --input         *input CSV file --input='/path/to/dir/input.csv'
   -n, --name          *column name for filename --name='name'
   -l, --label         *column name for label --label='group'
   -u, --url           *column name for URL --url='path'
@@ -104,6 +106,9 @@ $ tree ./save
 
 ## list command
 
+`list` creates a CSV file from images files, containing label and expected path on GCS/S3.
+ from url in CSV file. (for multi label classification)
+
 ```bash
 $ cloud-label-uploader help list
 Create list file from --input dir images
@@ -136,6 +141,8 @@ gs://my-bucket/test-project/human/5.png,human
 
 
 ## upload command
+
+`upload` uploads image files in a directory to GCS/S3 bucket.
 
 ```bash
 $ cloud-label-uploader help upload
@@ -170,6 +177,8 @@ $ cloud-label-uploader upload -i ./save -b 'example-bucket' -t 'jpg,png' -p 'aut
 
 ## vott command
 
+`vott` creates a CSV file for AutoML Vision object-detection from VoTT's tagging result json files.
+
 ```bash
 $ cloud-label-uploader help vott
 Create object-detection list file from VoTT results
@@ -177,7 +186,7 @@ Create object-detection list file from VoTT results
 Options:
 
   -h, --help                    display help information
-  -j, --json                   *VoTT json results dir path --image='/path/to/vott_json_dir'
+  -i, --input                  *VoTT json results dir path --input='/path/to/vott_json_dir'
   -o, --output[=./output.csv]  *output CSV file path --output='./output.csv'
   -p, --prefix[=gs://]         *prefix for file path --prefix='gs://<your-bucket-name>'
   -r, --recursive[=false]       read files in sub directories
