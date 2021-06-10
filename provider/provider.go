@@ -29,5 +29,5 @@ func Create(providerName string) (Provider, error) {
 	if fn, ok := providerGenerator[strings.ToLower(providerName)]; ok {
 		return fn()
 	}
-	return nil, fmt.Errorf("Unknown Provider: [%s]", providerName)
+	return nil, fmt.Errorf("unknown provider: [%s]", providerName)
 }

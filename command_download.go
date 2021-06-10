@@ -16,7 +16,7 @@ import (
 // download command
 type downloadT struct {
 	cli.Helper
-	Input       string `cli:"*i,input" usage:"image list file --input='/path/to/dir/input.csv'"`
+	Input       string `cli:"*i,input" usage:"input CSV file --input='/path/to/dir/input.csv'"`
 	ColumnName  string `cli:"*n,name" usage:"column name for filename --name='name'"`
 	ColumnLabel string `cli:"*l,label" usage:"column name for label --label='group'"`
 	ColumnURL   string `cli:"*u,url" usage:"column name for URL --url='path'"`
